@@ -52,7 +52,7 @@ func main() {
 		// err := dataChannel.Send(datachannel.PayloadString{Data: []byte(util.MustReadStdin())})
 		// util.Check(err)
 		fmt.Println("sending file")
-		const BufferSize = 32000
+		const BufferSize = 1024
 		file, err := os.Open("sender.exe")
 		if err != nil {
 			fmt.Println(err)
@@ -76,20 +76,20 @@ func main() {
 
 			pieceByte := make([]byte, 8)
 			binary.LittleEndian.PutUint64(pieceByte, piece)
-
+			dataToSend := append(pieceByte, buffer[:bytesread]...)
 			for {
-				err = dataChannel.Send(datachannel.PayloadBinary{Data: append(pieceByte, buffer[:bytesread]...)})
+				err = dataChannel.Send(datachannel.PayloadBinary{Data: dataToSend})
 				if err != nil {
 					log.Println(err)
 				}
-				time.Sleep(1000 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				log.Printf("waiting for ack\n")
 				doneWaiting := false
 				select {
 				case gotBytes := <-recievedBytes:
 					doneWaiting = bytes.Equal(pieceByte, gotBytes)
 				default:
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 				}
 				if doneWaiting {
 					break
