@@ -73,10 +73,11 @@ func main() {
 					os.Exit(1)
 				}
 			case *datachannel.PayloadBinary:
-				fmt.Printf("wrote %d bytes\n", len(p.Data))
-				f.Write(p.Data[8:])
+				dataRecieved := p.Data
+				fmt.Printf("received %d bytes\n", len(dataRecieved))
+				f.Write(dataRecieved[8:])
 				log.Println("sending ack")
-				sendBytes <- p.Data[:8]
+				sendBytes <- dataRecieved[:8]
 			default:
 				fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), d.Label)
 			}
