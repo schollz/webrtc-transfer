@@ -1,11 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/pions/webrtc"
@@ -17,6 +18,7 @@ import (
 var received string
 
 func main() {
+	recievedBytes := make(chan []byte)
 	// Everything below is the pion-WebRTC API! Thanks for using it ❤️.
 
 	// Prepare the configuration
@@ -51,7 +53,7 @@ func main() {
 		// util.Check(err)
 		fmt.Println("sending file")
 		const BufferSize = 32000
-		file, err := os.Open("data-channels-create.exe")
+		file, err := os.Open("sender.exe")
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -60,7 +62,7 @@ func main() {
 
 		buffer := make([]byte, BufferSize)
 
-		piece := 0
+		var piece uint64
 		for {
 			bytesread, err := file.Read(buffer)
 
@@ -72,16 +74,26 @@ func main() {
 				break
 			}
 
-			err = dataChannel.Send(datachannel.PayloadBinary{Data: buffer[:bytesread]})
-			if err != nil {
-				log.Println(err)
-			}
-			time.Sleep(20 * time.Millisecond)
+			pieceByte := make([]byte, 8)
+			binary.LittleEndian.PutUint64(pieceByte, piece)
 
-			continueSignal := fmt.Sprintf("piece%d", piece)
-			err = dataChannel.Send(datachannel.PayloadString{Data: []byte(continueSignal)})
-			if err != nil {
-				log.Println(err)
+			for {
+				err = dataChannel.Send(datachannel.PayloadBinary{Data: append(pieceByte, buffer[:bytesread]...)})
+				if err != nil {
+					log.Println(err)
+				}
+				time.Sleep(20 * time.Millisecond)
+				log.Printf("waiting for ack\n")
+				doneWaiting := false
+				select {
+				case gotBytes := <-recievedBytes:
+					doneWaiting = bytes.Equal(pieceByte, gotBytes)
+				default:
+					time.Sleep(10 * time.Millisecond)
+				}
+				if doneWaiting {
+					break
+				}
 			}
 
 			// for i := 0; i < 1000; i++ {
@@ -91,13 +103,6 @@ func main() {
 			// 	}
 			// 	time.Sleep(1 * time.Microsecond)
 			// }
-			log.Printf("waiting for signal '%s'\n", continueSignal)
-			for {
-				if received == continueSignal {
-					break
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
 
 			piece += 1
 		}
@@ -114,12 +119,9 @@ func main() {
 	dataChannel.OnMessage(func(payload datachannel.Payload) {
 		switch p := payload.(type) {
 		case *datachannel.PayloadString:
-			if strings.HasPrefix(string(p.Data), "piece") {
-				received = string(p.Data)
-			}
-
 			fmt.Printf("Message '%s' from DataChannel '%s' payload '%s'\n", p.PayloadType().String(), dataChannel.Label, string(p.Data))
 		case *datachannel.PayloadBinary:
+			recievedBytes <- p.Data
 			fmt.Printf("Message '%s' from DataChannel '%s' payload '% 02x'\n", p.PayloadType().String(), dataChannel.Label, p.Data)
 		default:
 			fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), dataChannel.Label)

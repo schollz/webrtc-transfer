@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/pions/webrtc"
 	"github.com/pions/webrtc/examples/util"
@@ -45,7 +44,7 @@ func main() {
 			fmt.Printf("Data channel '%s'-'%d' open. Random messages will now be sent to any connected DataChannels every 5 seconds\n", d.Label, d.ID)
 			for {
 				data := <-sendBytes
-				err := d.Send(datachannel.PayloadString{Data: data})
+				err := d.Send(datachannel.PayloadBinary{Data: data})
 				if err != nil {
 					log.Println(err)
 				}
@@ -69,16 +68,15 @@ func main() {
 			switch p := payload.(type) {
 			case *datachannel.PayloadString:
 				fmt.Printf("Message '%s' from DataChannel '%s' payload '%s'\n", p.PayloadType().String(), d.Label, string(p.Data))
-				if strings.HasPrefix(string(p.Data), "piece") {
-					log.Printf("sending piece '%s'", p.Data)
-					sendBytes <- []byte(string(p.Data))
-				} else if bytes.Equal(p.Data, []byte("done")) {
+				if bytes.Equal(p.Data, []byte("done")) {
 					f.Close()
 					os.Exit(1)
 				}
 			case *datachannel.PayloadBinary:
 				fmt.Printf("wrote %d bytes\n", len(p.Data))
-				f.Write(p.Data)
+				f.Write(p.Data[8:])
+				log.Println("sending ack")
+				sendBytes <- []byte(string(p.Data[:8]))
 			default:
 				fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), d.Label)
 			}
