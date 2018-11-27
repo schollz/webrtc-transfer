@@ -18,7 +18,7 @@ import (
 var received string
 
 func main() {
-	recievedBytes := make(chan []byte)
+	recievedBytes := make(chan []byte, 1024)
 	// Everything below is the pion-WebRTC API! Thanks for using it ❤️.
 
 	// Prepare the configuration
@@ -63,6 +63,7 @@ func main() {
 		buffer := make([]byte, BufferSize)
 
 		var piece uint64
+		piece = 100
 		for {
 			bytesread, err := file.Read(buffer)
 
@@ -121,8 +122,8 @@ func main() {
 		case *datachannel.PayloadString:
 			fmt.Printf("Message '%s' from DataChannel '%s' payload '%s'\n", p.PayloadType().String(), dataChannel.Label, string(p.Data))
 		case *datachannel.PayloadBinary:
-			recievedBytes <- p.Data
 			fmt.Printf("Message '%s' from DataChannel '%s' payload '% 02x'\n", p.PayloadType().String(), dataChannel.Label, p.Data)
+			recievedBytes <- p.Data
 		default:
 			fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), dataChannel.Label)
 		}
