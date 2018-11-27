@@ -82,14 +82,14 @@ func main() {
 				if err != nil {
 					log.Println(err)
 				}
-				time.Sleep(20 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 				log.Printf("waiting for ack\n")
 				doneWaiting := false
 				select {
 				case gotBytes := <-recievedBytes:
 					doneWaiting = bytes.Equal(pieceByte, gotBytes)
 				default:
-					time.Sleep(10 * time.Millisecond)
+					time.Sleep(100 * time.Millisecond)
 				}
 				if doneWaiting {
 					break

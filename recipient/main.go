@@ -76,7 +76,7 @@ func main() {
 				fmt.Printf("wrote %d bytes\n", len(p.Data))
 				f.Write(p.Data[8:])
 				log.Println("sending ack")
-				sendBytes <- []byte(string(p.Data[:8]))
+				sendBytes <- p.Data[:8]
 			default:
 				fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), d.Label)
 			}
