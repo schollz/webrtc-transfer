@@ -52,7 +52,7 @@ func main() {
 		// err := dataChannel.Send(datachannel.PayloadString{Data: []byte(util.MustReadStdin())})
 		// util.Check(err)
 		fmt.Println("sending file")
-		const BufferSize = 1024
+		const BufferSize = 32000
 		file, err := os.Open("sender.exe")
 		if err != nil {
 			fmt.Println(err)
@@ -81,7 +81,8 @@ func main() {
 			for {
 				err = dataChannel.Send(datachannel.PayloadBinary{Data: dataToSend})
 				if err != nil {
-					log.Println(err)
+					log.Println("Could not send on data channel", err.Error())
+					continue
 				}
 				time.Sleep(10 * time.Millisecond)
 				log.Printf("waiting for ack\n")
