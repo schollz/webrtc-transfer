@@ -135,16 +135,10 @@ func main() {
 	util.Check(err)
 
 	// Output the offer in base64 so we can paste it in browser
-	fmt.Println(util.Encode(offer.Sdp))
+	fmt.Println(util.Encode(offer))
 
 	// Wait for the answer to be pasted
-	sd := util.Decode(util.MustReadStdin())
-
-	// Set the remote SessionDescription
-	answer := webrtc.RTCSessionDescription{
-		Type: webrtc.RTCSdpTypeAnswer,
-		Sdp:  sd,
-	}
+	answer := util.Decode(util.MustReadStdin())
 
 	// Apply the answer as the remote description
 	err = peerConnection.SetRemoteDescription(answer)
