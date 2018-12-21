@@ -38,10 +38,10 @@ func main() {
 	// Register data channel creation handling
 	peerConnection.OnDataChannel(func(d *webrtc.RTCDataChannel) {
 		fmt.Printf("New DataChannel %s %d\n", d.Label, d.ID)
-		d.Send(datachannel.PayloadBinary{Data: []byte("ready")})
 		sendBytes := make(chan []byte, 1024)
 		// Register channel opening handling
 		d.OnOpen(func() {
+			d.Send(datachannel.PayloadBinary{Data: []byte("ready")})
 			fmt.Printf("Data channel '%s'-'%d' open. Random messages will now be sent to any connected DataChannels every 5 seconds\n", d.Label, d.ID)
 			for {
 				data := <-sendBytes
