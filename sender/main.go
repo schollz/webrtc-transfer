@@ -46,13 +46,13 @@ func main() {
 	// Register channel opening handling
 	dataChannel.OnOpen(func() {
 		fmt.Printf("Data channel '%s'-'%d' open\n", dataChannel.Label, dataChannel.ID)
-		time.Sleep(1 * time.Second)
+		time.Sleep(1 * time.Millisecond)
 		// fmt.Printf("What do you want to send?\n")
 		// err := dataChannel.Send(datachannel.PayloadString{Data: []byte(util.MustReadStdin())})
 		// util.Check(err)
 
 		fmt.Println("sending file")
-		const BufferSize = 3200
+		const BufferSize = 8192
 		file, err := os.Open("test.exe")
 		if err != nil {
 			fmt.Println(err)
