@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -52,15 +51,6 @@ func main() {
 		// err := dataChannel.Send(datachannel.PayloadString{Data: []byte(util.MustReadStdin())})
 		// util.Check(err)
 
-		// wait until ready
-		for {
-			gotBytes := <-recievedBytes
-			if bytes.Equal([]byte("ready"), gotBytes) {
-				log.Println("got ready")
-				break
-			}
-		}
-
 		fmt.Println("sending file")
 		const BufferSize = 32000
 		file, err := os.Open("sender.exe")
@@ -72,51 +62,26 @@ func main() {
 
 		buffer := make([]byte, BufferSize)
 		var piece uint64
-		piece = 100
+		piece = 1
 		for {
 			bytesread, err := file.Read(buffer)
-
 			if err != nil {
 				if err != io.EOF {
 					fmt.Println(err)
 				}
-
 				break
 			}
 
 			pieceByte := make([]byte, 8)
 			binary.LittleEndian.PutUint64(pieceByte, piece)
 			dataToSend := append(pieceByte, buffer[:bytesread]...)
-			for {
-				err = dataChannel.Send(datachannel.PayloadBinary{Data: dataToSend})
-				if err != nil {
-					log.Println("Could not send on data channel", err.Error())
-					continue
-				}
-				time.Sleep(10 * time.Millisecond)
-				log.Printf("waiting for ack\n")
-				doneWaiting := false
-				select {
-				case gotBytes := <-recievedBytes:
-					doneWaiting = bytes.Equal(pieceByte, gotBytes)
-					log.Println("got correct bytes")
-				default:
-					time.Sleep(10 * time.Millisecond)
-				}
-				if doneWaiting {
-					break
-				}
+			err = dataChannel.Send(datachannel.PayloadBinary{Data: dataToSend})
+			if err != nil {
+				log.Println("Could not send on data channel", err.Error())
+				continue
 			}
-
-			// for i := 0; i < 1000; i++ {
-			// 	err := dataChannel.Send(datachannel.PayloadString{Data: []byte(fmt.Sprintf("%d", i))})
-			// 	if err != nil {
-			// 		log.Println(err)
-			// 	}
-			// 	time.Sleep(1 * time.Microsecond)
-			// }
-
 			piece += 1
+			time.Sleep(1 * time.Millisecond)
 		}
 		log.Println("sending done signal")
 		err = dataChannel.Send(datachannel.PayloadString{Data: []byte("done")})
