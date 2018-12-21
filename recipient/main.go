@@ -75,7 +75,7 @@ func main() {
 				dataRecieved := p.Data
 				log.Printf("got piece %x", dataRecieved[:8])
 				f.Write(dataRecieved[8:])
-				sendBytes <- dataRecieved[:8]
+				//sendBytes <- dataRecieved[:8]
 			default:
 				fmt.Printf("Message '%s' from DataChannel '%s' no payload \n", p.PayloadType().String(), d.Label)
 			}

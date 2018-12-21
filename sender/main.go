@@ -76,6 +76,7 @@ func main() {
 			binary.LittleEndian.PutUint64(pieceByte, piece)
 			dataToSend := append(pieceByte, buffer[:bytesread]...)
 			err = dataChannel.Send(datachannel.PayloadBinary{Data: dataToSend})
+			log.Printf("sending piece %x", dataToSend[:8])
 			if err != nil {
 				log.Println("Could not send on data channel", err.Error())
 				continue
