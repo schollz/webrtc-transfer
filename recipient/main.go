@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/pions/webrtc"
 	"github.com/pions/webrtc/examples/util"
@@ -61,6 +62,8 @@ func main() {
 			panic(err)
 		}
 
+		startTime := false
+		timer := time.Now()
 		// Register message handling
 		d.OnMessage(func(payload datachannel.Payload) {
 			switch p := payload.(type) {
@@ -68,9 +71,14 @@ func main() {
 				fmt.Printf("Message '%s' from DataChannel '%s' payload '%s'\n", p.PayloadType().String(), d.Label, string(p.Data))
 				if bytes.Equal(p.Data, []byte("done")) {
 					f.Close()
+					fmt.Println(time.Since(timer))
 					os.Exit(1)
 				}
 			case *datachannel.PayloadBinary:
+				if !startTime {
+					startTime = true
+					timer = time.Now()
+				}
 				dataRecieved := p.Data
 				log.Printf("got piece %x", dataRecieved[:8])
 				_, err := f.Write(dataRecieved[8:])
