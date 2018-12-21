@@ -73,7 +73,7 @@ func main() {
 			case *datachannel.PayloadBinary:
 				dataRecieved := p.Data
 				log.Printf("got piece %x", dataRecieved[:8])
-				err := f.Write(dataRecieved[8:])
+				_, err := f.Write(dataRecieved[8:])
 				if err != nil {
 					log.Print(err)
 				}
