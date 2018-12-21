@@ -56,7 +56,7 @@ func main() {
 		for {
 			gotBytes := <-recievedBytes
 			if bytes.Equal([]byte("ready"), gotBytes) {
-				log.Println("got correct bytes")
+				log.Println("got ready")
 				break
 			}
 		}
