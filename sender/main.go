@@ -51,6 +51,16 @@ func main() {
 		// fmt.Printf("What do you want to send?\n")
 		// err := dataChannel.Send(datachannel.PayloadString{Data: []byte(util.MustReadStdin())})
 		// util.Check(err)
+
+		// wait until ready
+		for {
+			gotBytes := <-recievedBytes
+			if bytes.Equal([]byte("ready"), gotBytes) {
+				log.Println("got correct bytes")
+				break
+			}
+		}
+
 		fmt.Println("sending file")
 		const BufferSize = 32000
 		file, err := os.Open("sender.exe")
@@ -61,7 +71,6 @@ func main() {
 		defer file.Close()
 
 		buffer := make([]byte, BufferSize)
-
 		var piece uint64
 		piece = 100
 		for {
@@ -90,6 +99,7 @@ func main() {
 				select {
 				case gotBytes := <-recievedBytes:
 					doneWaiting = bytes.Equal(pieceByte, gotBytes)
+					log.Println("got correct bytes")
 				default:
 					time.Sleep(10 * time.Millisecond)
 				}
