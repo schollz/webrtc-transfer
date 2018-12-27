@@ -82,7 +82,7 @@ func main() {
 				continue
 			}
 			piece += 1
-			time.Sleep(1 * time.Microsecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 		log.Println("sending done signal")
 		err = dataChannel.Send(datachannel.PayloadString{Data: []byte("done")})
