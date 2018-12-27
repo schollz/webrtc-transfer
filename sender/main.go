@@ -24,7 +24,7 @@ func main() {
 	config := webrtc.RTCConfiguration{
 		IceServers: []webrtc.RTCIceServer{
 			{
-				URLs: []string{"stun:stun.l.google.com:19302"},
+				URLs: []string{"stun:stun1.l.google.com:19305"},
 			},
 		},
 	}
@@ -52,7 +52,7 @@ func main() {
 		// util.Check(err)
 
 		fmt.Println("sending file")
-		const BufferSize = 8192
+		const BufferSize = 4096
 		file, err := os.Open("test.exe")
 		if err != nil {
 			fmt.Println(err)
@@ -82,7 +82,7 @@ func main() {
 				continue
 			}
 			piece += 1
-			time.Sleep(1 * time.Millisecond)
+			time.Sleep(1 * time.Microsecond)
 		}
 		log.Println("sending done signal")
 		err = dataChannel.Send(datachannel.PayloadString{Data: []byte("done")})
